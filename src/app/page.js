@@ -17,7 +17,8 @@ import {
   Globe, 
   Aperture,
   Mail,
-  Users
+  Users,
+  User
 } from "lucide-react";
 import s from "./page.module.css";
 
@@ -150,6 +151,49 @@ const CHECKLIST = [
   { icon: <FolderKey size={20} />, text: "Follow naming format strictly" },
 ];
 
+/* ───── Judges Data ───── */
+const JUDGES = [
+  { name: "To be announced", title: "Distinguished Judge", bio: "Renowned photography expert joining our panel soon." },
+  { name: "To be announced", title: "Distinguished Judge", bio: "Renowned photography expert joining our panel soon." },
+  { name: "To be announced", title: "Distinguished Judge", bio: "Renowned photography expert joining our panel soon." }
+];
+
+/* ───── Slot Machine Hook ───── */
+function useSlotMachine(target, duration = 2000) {
+  const [value, setValue] = useState(target.replace(/[0-9]/g, "0"));
+  const [started, setStarted] = useState(false);
+  
+  useEffect(() => {
+    if (!started) return;
+    const targetArray = target.split("");
+    
+    let startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      
+      if (progress >= 1) {
+        clearInterval(interval);
+        setValue(target);
+        return;
+      }
+      
+      const charsLocked = Math.floor(progress * targetArray.length);
+      const nextValue = targetArray.map((char, index) => {
+        if (index < charsLocked) return char;
+        if (char === "," || char === " ") return char;
+        return Math.floor(Math.random() * 10).toString();
+      });
+      
+      setValue(nextValue.join(""));
+    }, 50);
+    
+    return () => clearInterval(interval);
+  }, [target, duration, started]);
+
+  return [value, setStarted];
+}
+
 export default function Home() {
   const countdown = useCountdown("2026-12-25T23:59:59");
   const stickyVisible = useStickyVisible();
@@ -157,6 +201,23 @@ export default function Home() {
   const [openAccordion, setOpenAccordion] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
+  
+  const [prizeAmount, startPrizeAnim] = useSlotMachine("50,000", 2500);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          startPrizeAnim(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    const prizepool = document.getElementById("prizepool");
+    if (prizepool) observer.observe(prizepool);
+    return () => observer.disconnect();
+  }, [startPrizeAnim]);
 
   const toggleAccordion = (i) => setOpenAccordion(openAccordion === i ? null : i);
 
@@ -292,6 +353,43 @@ export default function Home() {
 
       <hr className="section-divider" />
 
+      {/* ═══════ PRIZE POOL ═══════ */}
+      <section id="prizepool" className={`${s.prizepool} section`}>
+        {/* Roaming Paper Cut Confetti */}
+        <div className={s.confettiContainer}>
+          {Array.from({ length: 30 }).map((_, i) => (
+            <div key={i} className={`${s.confettiParticle} ${s[`confetti${i % 5}`]}`} />
+          ))}
+        </div>
+
+        <div className="container" style={{ position: "relative", zIndex: 2 }}>
+          <div className={s.prizeCard}>
+            <div className={s.prizeHeader}>
+              <h2 className={s.prizeTitle}>
+                Total <span className="accent">Prize Pool</span>
+              </h2>
+              <p className={s.prizeSubtitle}>Showcase your talent and win big.</p>
+            </div>
+            
+            <div className={s.prizeAmountWrapper}>
+              <span className={s.prizeCurrency}>BDT</span>
+              <span className={s.prizeAmount}>{prizeAmount}</span>
+            </div>
+
+            <div className={s.prizeExtras}>
+              <p>+ Exciting Gift Hampers & Certificates for Winners</p>
+              <p>Special crests for category champions!</p>
+            </div>
+            
+            <button onClick={handleOpenModal} className="btn-primary" style={{ marginTop: '2rem' }}>
+              Enter the Competition Now
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <hr className="section-divider" />
+
       {/* ═══════ CATEGORIES ═══════ */}
       <section id="categories" className={`${s.categories} section`}>
         <div className="container">
@@ -410,6 +508,33 @@ export default function Home() {
                     ))}
                   </ul>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <hr className="section-divider" />
+
+      {/* ═══════ JUDGES PANEL ═══════ */}
+      <section id="judges" className={`${s.judges} section`}>
+        <div className="container">
+          <h2 className="section-title">
+            Judges <span className="accent">Panel</span>
+          </h2>
+          <p className="section-subtitle">Meet our esteemed panel of distinguished photography experts.</p>
+
+          <div className={s.judgesGrid}>
+            {JUDGES.map((judge, i) => (
+              <div key={i} className={s.judgeCard}>
+                <div className={s.judgePhotoWrapper}>
+                  <div className={s.judgePhotoPlaceholder}>
+                    <User size={48} className={s.judgeIcon} />
+                  </div>
+                </div>
+                <h3 className={s.judgeName}>{judge.name}</h3>
+                <p className={s.judgeTitle}>{judge.title}</p>
+                <p className={s.judgeBio}>{judge.bio}</p>
               </div>
             ))}
           </div>
