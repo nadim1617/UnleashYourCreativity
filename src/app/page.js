@@ -155,11 +155,61 @@ export default function Home() {
   const stickyVisible = useStickyVisible();
   const cursor = useCursorPosition();
   const [openAccordion, setOpenAccordion] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAgreed, setIsAgreed] = useState(false);
 
   const toggleAccordion = (i) => setOpenAccordion(openAccordion === i ? null : i);
 
+  const handleOpenModal = (e) => {
+    e.preventDefault();
+    setIsModalOpen(true);
+    setIsAgreed(false);
+  };
+
+  const handleProceed = () => {
+    if (isAgreed) {
+      setIsModalOpen(false);
+      window.open(SUBMIT_URL, "_blank");
+    }
+  };
+
+  const handleGoToRules = () => {
+    setIsModalOpen(false);
+    document.getElementById("rules")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": "Unleash Your Creativity Season 2.0",
+    "description": "A National Photography Exhibition organized by Daffodil International University Photographic Society (DIUPS).",
+    "image": "https://unleashyourcreativity.vercel.app/images/hero-bg.png",
+    "startDate": "2026-12-25T09:00:00+06:00",
+    "endDate": "2026-12-30T18:00:00+06:00",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+    "eventStatus": "https://schema.org/EventScheduled",
+    "location": {
+      "@type": "Place",
+      "name": "Daffodil International University",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Dhaka",
+        "addressCountry": "BD"
+      }
+    },
+    "organizer": {
+      "@type": "Organization",
+      "name": "Daffodil International University Photographic Society",
+      "url": "https://unleashyourcreativity.vercel.app"
+    }
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ═══════ CURSOR GLOW ═══════ */}
       <div 
         className="cursor-glow" 
@@ -187,9 +237,9 @@ export default function Home() {
           <p className={s.heroSeason}>Season 2.0</p>
           <p className={s.heroOrg}>A National Photography Exhibition</p>
           <div className={s.heroButtons}>
-            <a href={SUBMIT_URL} target="_blank" rel="noopener noreferrer" className="btn-primary" id="hero-submit-btn">
+            <button onClick={handleOpenModal} className="btn-primary" id="hero-submit-btn">
               <Camera size={20} /> Submit Your Entry
-            </a>
+            </button>
             <a href="#categories" className="btn-secondary">
               Explore Categories
             </a>
@@ -341,11 +391,19 @@ export default function Home() {
           <div className={s.accordion}>
             {RULES.map((rule, i) => (
               <div key={i} className={s.accordionItem} id={`rule-${i}`}>
-                <button className={s.accordionBtn} onClick={() => toggleAccordion(i)}>
+                <button 
+                  className={s.accordionBtn} 
+                  onClick={() => toggleAccordion(i)}
+                  aria-expanded={openAccordion === i}
+                  aria-controls={`accordion-body-${i}`}
+                >
                   <span>{rule.title}</span>
                   <span className={`${s.accordionIcon} ${openAccordion === i ? s.accordionIconOpen : ""}`}>+</span>
                 </button>
-                <div className={`${s.accordionBody} ${openAccordion === i ? s.accordionBodyOpen : ""}`}>
+                <div 
+                  id={`accordion-body-${i}`}
+                  className={`${s.accordionBody} ${openAccordion === i ? s.accordionBodyOpen : ""}`}
+                >
                   <ul className={s.accordionText}>
                     {rule.items.map((item, j) => (
                       <li key={j}>{item}</li>
@@ -412,6 +470,7 @@ export default function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={s.socialLink}
+                  aria-label="Visit DIUPS Official Facebook Page"
                 >
                   <Globe size={16} /> Official Facebook Page
                 </a>
@@ -420,6 +479,7 @@ export default function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={s.socialLink}
+                  aria-label="Visit DIUPS Official Facebook Group"
                 >
                   <Users size={16} /> Official Facebook Group
                 </a>
@@ -428,6 +488,7 @@ export default function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={s.socialLink}
+                  aria-label="Visit DIUPS Official Instagram"
                 >
                   <Aperture size={16} /> Official Instagram
                 </a>
@@ -446,10 +507,43 @@ export default function Home() {
 
       {/* ═══════ STICKY SUBMIT ═══════ */}
       <div className={`${s.stickySubmit} ${stickyVisible ? s.stickySubmitVisible : ""}`}>
-        <a href={SUBMIT_URL} target="_blank" rel="noopener noreferrer" className={s.stickySubmitBtn} id="sticky-submit-btn">
+        <button onClick={handleOpenModal} className={s.stickySubmitBtn} id="sticky-submit-btn">
           <Camera size={20} /> Submit Now
-        </a>
+        </button>
       </div>
+
+      {/* ═══════ MODAL OVERLAY ═══════ */}
+      {isModalOpen && (
+        <div className={s.modalOverlay}>
+          <div className={s.modalContent}>
+            <h3>Before you submit</h3>
+            <p>Please confirm that you have read all the rules, terms, and file naming formats carefully.</p>
+            
+            <label className={s.modalCheckbox}>
+              <input 
+                type="checkbox" 
+                checked={isAgreed} 
+                onChange={(e) => setIsAgreed(e.target.checked)} 
+              />
+              I have read and understand the rules and terms.
+            </label>
+
+            <div className={s.modalActions}>
+              <button className="btn-secondary" onClick={handleGoToRules}>
+                Take me to Rules
+              </button>
+              <button 
+                className="btn-primary" 
+                disabled={!isAgreed}
+                onClick={handleProceed}
+                style={{ opacity: isAgreed ? 1 : 0.5, cursor: isAgreed ? "pointer" : "not-allowed" }}
+              >
+                Proceed to Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
