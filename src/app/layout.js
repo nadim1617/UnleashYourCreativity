@@ -66,13 +66,15 @@ export const metadata = {
       "Submit your best photographs to UYC 2.0 — the national photography exhibition by Daffodil International University Photographic Society (DIUPS).",
     images: ["/images/hero-bg.png"],
   },
+  verification: {
+    google: "krjJ7DUPuioiDOJu8aRAq5qRFmAKx7CtES1mv1jG-K0",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <meta name="google-site-verification" content="krjJ7DUPuioiDOJu8aRAq5qRFmAKx7CtES1mv1jG-K0" />
         <link rel="icon" href="/images/diups-logo.png" />
       </head>
       <body>{children}</body>
